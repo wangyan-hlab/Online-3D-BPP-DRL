@@ -38,6 +38,9 @@ def train_model(args):
     # set random seed
     torch.manual_seed(args.seed)
     torch.cuda.manual_seed_all(args.seed)
+    if args.tensor_dtype == 'float64':
+        print("[INFO] set default tensor_dtype to float64")
+        torch.set_default_dtype(torch.float64)
     
     save_path = args.save_dir
     load_path = args.load_dir
@@ -62,7 +65,7 @@ def train_model(args):
     device = torch.device(args.device)
     envs = make_vec_envs(env_name, args.seed, args.num_processes, args.gamma, log_dir, device, False, args = args)
 
-    if args.pretrain:
+    if args.load_model:
         model_pretrained, ob_rms = torch.load(os.path.join(load_path, args.load_name))
         actor_critic = Policy(
             envs.observation_space.shape, envs.action_space,
@@ -96,10 +99,11 @@ def train_model(args):
                        args.value_loss_coef,
                        args.entropy_coef,
                        args.invalid_coef,
-                       args.lr,
+                       args.learning_rate,
                        args.eps,
                        args.alpha,
-                       max_grad_norm = 0.5
+                       max_grad_norm = 0.5,
+                       args=args
                            )
     elif args.algorithm == 'acktr':
         agent = algo.ACKTR(actor_critic,

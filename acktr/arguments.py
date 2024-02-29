@@ -1,49 +1,91 @@
 import argparse
 import time
+import numpy as np
 
 def get_args():
     parser = argparse.ArgumentParser(description='RL')
+
     parser.add_argument(
-       '--mode', default='train', help='Test trained model or train new model, test | train'
+        '--mode', default='train', help='Test trained model or train new model, test | train'
     )
     parser.add_argument(
-       '--env_name', default='Bpp-v0', type=str, help='bin packing environment name'
+        '--real', action='store_true', default=False, help='use this flag when doing real evaluation'
+    )
+    # env
+    parser.add_argument(
+        '--env_name', default='Bpp-v0', type=str, help='bin packing environment name'
     )
     parser.add_argument(
-       '--container_size', default=(10, 10, 10), type=int, help='container size along x, y and z axis'
+        '--container_size', nargs='+', default=(10, 10, 10), type=int, help='container size along x, y and z axis'
     )
     parser.add_argument(
-        '--enable-rotation', action='store_true', default=False, help='Whether agent can rotate boxes'
+        '--item_size_range', nargs='+', default=(2,2,2,5,5,5), type=int, help='the item size range, (min_width, min_length, min_height, max_width, max_length, max_height)'
+    )
+    # device
+    parser.add_argument(
+        '--use_cuda', action='store_true', default=False, help='whether to use cuda'
     )
     parser.add_argument(
-        '--load-model', action='store_true', default=False,  help='Whether to use trained model'
+        '--device', default=0, type=int,  help='device id (default: 0)'
+    )
+    
+    # training
+    parser.add_argument(
+        '--item_seq', default='cut1', help='item sequence generators (ignored when testing), cut1|cut2|rs'
     )
     parser.add_argument(
-        '--load-name', default='default_cut_2.pt', 
-        help='The name of trained model, you can put new trained model in it'
+        '--data_name', default='cut_2.pt', help=' the name of dataset, check data_dir for details'
     )
     parser.add_argument(
-        '--data-name', default='cut_2.pt',
-        help='The name of testing dataset'
+        '--tensor_dtype', default='float32', type=str, help='the torch tensor datatype'
     )
     parser.add_argument(
-        '--item-size-range', default=(2,2,2,5,5,5), type=tuple, help='the item size range, (min_width, min_length, min_height, max_width, max_length, max_height)'
+        '--enable_rotation', action='store_true', default=False,  help='whether agent can rotate box'
     )
     parser.add_argument(
-        '--use-cuda', action='store_true', default=False, help='whether to use cuda'
-    )
-    parser.add_argument(
-        '--tensorboard', action='store_true', default=False, help='whether use tensorboard to tracing trainning process'
-    )
-    parser.add_argument(
-        '--preview', default=1, type=int, help='the item number agent knows (ignored when training)'
-    )
-    parser.add_argument(
-        '--item-seq', default='cut1', help='item sequence generators (ignored when testing), cut1|cut2|rs'
+        '--seed', default=1, type=int,  help='random seed (default: 1)'
     )
     parser.add_argument(
         '--algorithm', default='acktr', type=str,  help='algorithm used, acktr|ppo|a2c'
     )
+
+    # test
+    parser.add_argument(
+        '--preview', default=1, type=int, help='the item number agent knows (ignored when training)'
+    )
+    parser.add_argument(
+        '--cases', default=100, type=int,  help='the number of sequences used for test (default 100)'
+    )
+
+    # saving and logging
+    parser.add_argument(
+        '--tensorboard', action='store_true', default=False, help='whether use tensorboard to tracing trainning process'
+    )
+    parser.add_argument(
+        '--save_model', action='store_true', default=False,  help='whether to save training model'
+    )
+    parser.add_argument(
+        '--save_dir', default='./saved_models/', help='directory to save agent logs (default: ./saved_models/)'
+    )
+    parser.add_argument(
+        '--save_interval', default=10, type=int,  help='save interval, one save per n updates (default: 100)'
+    )
+    parser.add_argument(
+        '--log_interval', default=10, type=int,  help='log interval, one log per n updates (default: 100)'
+    )
+
+    # loading pretrained model
+    parser.add_argument(
+        '--load_model', action='store_true', default=False,  help='Whether to use trained model'
+    )
+    parser.add_argument(
+        '--load_name', default='default_cut_2.pt', help='default trained model for testing or continuing training'
+    )
+    parser.add_argument(
+        '--load_dir', default='./pretrained_models/', help='directory to load agent logs (default: ./pretrained_models/)'
+    )
+    
+    # rarely tuning
     parser.add_argument(
         '--gamma', default=1.0, type=float,  help='discount factor for rewards (default: 1.0)'
     )
@@ -72,49 +114,14 @@ def get_args():
         '--num_processes', default=16, type=int,  help='how many training CPU processes to use (default: 16)'
     )
     parser.add_argument(
-        '--device', default=0, type=int,  help='device id (default: 0)'
-    )
-    parser.add_argument(
-        '--save_interval', default=10, type=int,  help='save interval, one save per n updates (default: 100)'
-    )
-    parser.add_argument(
-        '--log_interval', default=10, type=int,  help='log interval, one log per n updates (default: 10)'
-    )
-    parser.add_argument(
-        '--save_model', action='store_true', default=False,  help='whether to save training model'
-    )
-    parser.add_argument(
-        '--cases', default=100, type=int,  help='the number of sequences used for test (default 100)'
-    )
-    parser.add_argument(
-        '--pretrain', action='store_true', default=False,  help='load whole model'
-    )
-    parser.add_argument(
         '--num_steps', default=5, type=int,  help='number of forward steps in A2C (default: 5)'
     )
-    parser.add_argument(
-        '--enable_rotation', action='store_true', default=False,  help='whether agent can rotate box'
-    )
-    parser.add_argument(
-        '--data_name', default='cut_2.pt', help=' the name of dataset, check data_dir for details'
-    )
-    parser.add_argument(
-        '--load_name', default='default_cut_2.pt', help='default trained model for testing or continuing training'
-    )
-    parser.add_argument(
-        '--load_dir', default='./pretrained_models/', help='directory to load agent logs (default: ./pretrained_models/)'
-    )
-    parser.add_argument(
-        '--save_dir', default='./saved_models/', help='directory to save agent logs (default: ./saved_models/)'
-    )
-    parser.add_argument(
-        '--seed', default=1, type=int,  help='random seed (default: 1)'
-    )
+
     args = parser.parse_args()
 
     args.device = "cuda:" + str(args.device) if args.use_cuda else "cpu"
     args.bin_size = args.container_size
-    args.pallet_size = args.container_size[0]
+    args.pallet_size = args.container_size[0]   # TODO: it assumes the pallet is square?
     args.channel = 4 # channels of CNN: 4 for hmap+next box, 5 for hmap nextbox+truemask
     args.data_type = args.item_seq
     args.test = (args.mode == 'test')
@@ -129,39 +136,34 @@ def get_args():
 
     assert args.mode in ['train', 'test']
     if args.mode == 'train' and args.load_model:
-        print('continue training model \"%s\"'%args.load_name)
+        print('Continue training model \"%s\"'%args.load_name)
     if args.mode == 'test' and args.load_model:
-        print('test trained model \"%s\"'%args.load_name)
+        print('Test trained model \"%s\"'%args.load_name)
     if args.mode == 'train' and not args.load_model:
-        print('train new model')
+        print('Train new model')
     if args.mode == 'test' and not args.load_model:
-        raise Exception('no trained model chosed')
+        raise Exception('No trained model chosed')
     if args.mode not in ['test', 'train']:
         raise Exception('Unknown option \'%s\''%(args.mode))
     if args.item_seq not in ['cut1', 'rs', 'cut2']:
         raise Exception('Unsupported generator \'%s\''%(args.item_seq))
-    print('the dataset used: ', args.data_name)
+    
+    print("===== PARSED ARGS INFO =====")
+    print('data_name: ', args.data_name)
     time.sleep(0.5)
-    print('the range of item size:  ', args.item_size_range)
+    print('item_size_range: ', args.item_size_range)
     time.sleep(0.5)
-    print('the size of bin:  ', args.bin_size)
+    print('bin_size: ', args.bin_size)
     time.sleep(0.5)
-    print('the number of known items:  ', args.preview)
+    print('preview: ', args.preview)
     time.sleep(0.5)
-    print('item sequence generator:  ', args.item_seq)
+    print('item_seq: ', args.item_seq)
     time.sleep(0.5)
     print('enable_rotation: ', args.enable_rotation)
-    print('use cuda:  ', args.use_cuda)
+    print('use_cuda: ', args.use_cuda)
     time.sleep(0.5)
-    # generate item size set
-    item_set = []
-    for i in range(args.item_size_range[0],args.item_size_range[3]+1):
-        for j in range(args.item_size_range[1],args.item_size_range[4]+1):
-            for k in range(args.item_size_range[2],args.item_size_range[5]+1):
-                item_set.append((i,j,k))
-    args.item_set = item_set
-    print('item set: ', item_set)
-    return args
-
-
+    
+    print('box_size_set length: ', len(box_size_set))
+    # print('ITEM SET SIZE: ', box_size_set)
  
+    return args

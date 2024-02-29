@@ -1,4 +1,4 @@
-from time import clock
+from time import perf_counter
 from acktr.model_loader import nnModel
 from acktr.reorder import ReorderTree
 import gym
@@ -11,7 +11,7 @@ def run_sequence(nmodel, raw_env, preview_num, c_bound):
     obs = env.cur_observation
     default_counter = 0
     box_counter = 0
-    start = clock()
+    start = perf_counter()
     while True:
         box_list = env.box_creator.preview(preview_num)
         # print(box_list)
@@ -19,14 +19,14 @@ def run_sequence(nmodel, raw_env, preview_num, c_bound):
         act, val, default = tree.reorder_search()
         obs, _, done, info = env.step([act])
         if done:
-            end = clock()
+            end = perf_counter()
             print('Time cost:', end-start)
             print('Ratio:', info['ratio'])
             return info['ratio'], info['counter'], end-start,default_counter/box_counter
         box_counter += 1
         default_counter += int(default)
 
-def unified_test(url,  args, pruning_threshold = 0.5):
+def unified_test(url, args, pruning_threshold = 0.5):
     nmodel = nnModel(url, args)
     data_url = './dataset/' +args.data_name
     env = gym.make(args.env_name,

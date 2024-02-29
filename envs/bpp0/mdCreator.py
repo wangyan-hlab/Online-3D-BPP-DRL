@@ -102,7 +102,7 @@ class Box(object):
 
 class bin(object):
     def __init__(self, container_size, given_bound):
-        self.bin = Box(given_bound,container_size[2], 0, container_size[0], container_size[1], container_size[2],0,0,0)
+        self.bin = Box(given_bound, container_size[2], 0, container_size[0], container_size[1], container_size[2], 0, 0, 0)
         self.boxes = [self.bin]
         self.given_bound = given_bound
         print(self.given_bound)

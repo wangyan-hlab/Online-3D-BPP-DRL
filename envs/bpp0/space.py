@@ -4,6 +4,11 @@ import copy, time
 
 
 class Box(object):
+    """
+    Args:
+        lx, ly, lz: a box's position represented by its front-left-bottom (FLB) corner
+        x, y, z: a box's length, width, and height
+    """
     def __init__(self, x, y, z, lx, ly, lz):
         self.x = x
         self.y = y
@@ -17,6 +22,10 @@ class Box(object):
 
 
 class Space(object):
+    """
+    Args:
+        width, length, height: the bin's size
+    """
     def __init__(self, width=10, length=10, height=10):
         self.plain_size = np.array([width, length, height])
         self.plain = np.zeros(shape=(width, length), dtype=np.int32)
