@@ -31,6 +31,9 @@ def get_args():
     
     # training
     parser.add_argument(
+        '--use_existing_data', action='store_true', default=False, help='whether to use existing data to train'
+    )
+    parser.add_argument(
         '--item_seq', default='cut1', help='item sequence generators (ignored when testing), cut1|cut2|rs'
     )
     parser.add_argument(
@@ -149,21 +152,24 @@ def get_args():
         raise Exception('Unsupported generator \'%s\''%(args.item_seq))
     
     print("===== PARSED ARGS INFO =====")
+    
     print('data_name: ', args.data_name)
     time.sleep(0.5)
-    print('item_size_range: ', args.item_size_range)
-    time.sleep(0.5)
+    
+    if args.mode == 'train':
+        print('item_size_range: ', args.item_size_range)
+        time.sleep(0.5)
+        print('item_seq: ', args.item_seq)
+        time.sleep(0.5)
     print('bin_size: ', args.bin_size)
     time.sleep(0.5)
     print('preview: ', args.preview)
-    time.sleep(0.5)
-    print('item_seq: ', args.item_seq)
     time.sleep(0.5)
     print('enable_rotation: ', args.enable_rotation)
     print('use_cuda: ', args.use_cuda)
     time.sleep(0.5)
     
-    print('box_size_set length: ', len(box_size_set))
+    # print('box_size_set length: ', len(box_size_set))
     # print('ITEM SET SIZE: ', box_size_set)
  
     return args

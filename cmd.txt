@@ -1,0 +1,17 @@
+# generate box sequence data
+python test_boxgen.py --container_size 10 10 10 --item_size_range 2 2 2 5 5 5 --item_seq cut2 --cases 100
+
+# run a training process
+# generate data on the fly
+python main.py --use_cuda --container_size 10 10 10 --item_size_range 2 2 2 5 5 5 --item_seq cut2 --tensor_dtype float64 --tensorboard --save_model
+# random generate training data from a given list
+python main.py --use_cuda --container_size 10 10 10 --item_seq rs --tensor_dtype float64 --tensorboard --save_model
+(random generator has been hacked)
+
+# test
+python main.py --mode test --use_cuda --container_size 10 10 10 --data_name /path/to/dataset --load_model --load_dir $model_dir --load_name $model_name --cases 100 --preview 1 (--enable_rotation)
+## visulization
+### sim
+python test_inference.py --mode test --container_size 25 25 25 --data_name cut2_bound_4_14_bin_25.pt --load_model --load_dir /home/ubuntu/online_3d_bpp_drl/saved_models/items_real_cut2_bound_4_14_bin_25/ --load_name Bpp-v02024.02.28-13-31.pt --cases 50 --preview 5
+### real
+python test_inference.py --mode test --container_size 10 10 10 --load_model --load_dir ./pretrained_models/ --load_name default_cut_2.pt --preview 5 --real

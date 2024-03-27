@@ -58,6 +58,9 @@ def get_possible_position(observation, container_size):
 
     if action_mask.sum() == 0:
         action_mask[:, :] = 1
+    # print(">>>x,y,z = {},{},{}".format(x, y, z))
+    # print(">>>plain = {}".format(plain))
+    # print(">>>action_mask = {}".format(action_mask))
 
     return action_mask.reshape((-1,)).tolist()
 

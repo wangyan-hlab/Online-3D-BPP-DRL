@@ -288,6 +288,7 @@ class CNNPro(NNBase):
             nn.ReLU(),
             Flatten(),
             init_(nn.Linear(8*args.pallet_size*args.pallet_size, hidden_size)),
+            # init_(nn.Linear(8*args.container_size[0]*args.container_size[1], hidden_size)), # TODO: the mask size may not be square
             nn.ReLU(),
             init_(nn.Linear(hidden_size, pred_len)),
             nn.ReLU(),

@@ -5,13 +5,18 @@ from copy import deepcopy
 from space import Box
 
 class PackingGame(object):
-    def __init__(self, box_creator=None, enable_give_up=False):
+    def __init__(self, box_creator=None, enable_give_up=False, **kwargs):
         self.box_creator = box_creator
-        self.space = Space(10, 10, 10)
+        self.bin_size = kwargs.get('bin_size')
+        if self.bin_size is None:
+            self.bin_size = [10, 10, 10]
+        self.space = Space(self.bin_size[0], self.bin_size[1], self.bin_size[2])
         self.can_give_up = enable_give_up
         self.next_box = None
         self.cur_observation = None
-        self.data_name = 'cut_2.txt'
+        self.data_name = kwargs.get('data_name')
+        if self.data_name is None:
+            self.data_name = 'real_boxgen_type_1_6_bin_25.pt'
         if self.box_creator is None:
             self.box_creator = LoadBoxCreator(data_name = self.data_name)
 
@@ -66,14 +71,17 @@ class PackingGame(object):
 
 class AdjustPackingGame(PackingGame):
     def __init__(self, box_creator=None, enable_give_up=False, adjust_grid=0, **kwags):
-        super().__init__(box_creator, enable_give_up)
+        super().__init__(box_creator, enable_give_up, **kwags)
         self.adjust_grid = adjust_grid
         if kwags.get('_adjust_ratio'):
             self.adjust_grid = kwags.get('_adjust_ratio')
         self.flip_possibility = kwags.get('flip_possibility')
 
         self.adjust_flag = kwags.get('adjust')
-        self.container = Box(10,10,10,0,0,0)
+        self.bin_size = kwags.get('bin_size')
+        if self.bin_size is None:
+            self.bin_size = [10, 10, 10]
+        self.container = Box(self.bin_size[0],self.bin_size[1],self.bin_size[2],0,0,0)
         self.container.set_color('skyblue')
 
         if self.flip_possibility is not None:
@@ -82,7 +90,7 @@ class AdjustPackingGame(PackingGame):
 
     def reset(self):
         self.box_creator.reset()
-        self.space = Space(10, 10, 10)
+        self.space = Space(self.bin_size[0],self.bin_size[1],self.bin_size[2])
         self.box_creator.generate_box_size()
         self.next_box = self.box_creator.preview(1)[0]
         self.temp_box = deepcopy(self.next_box)
@@ -268,5 +276,3 @@ class AdjustPackingGame(PackingGame):
         movec, dis = func(mov_rd, dis_rd, movec, dis)
         position = (lx + movec[0], ly + movec[1])
         return self.space.position_to_index(position), dis
-
-

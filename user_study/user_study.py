@@ -5,7 +5,7 @@ from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from os import listdir,makedirs
 from os.path import exists
-size = 10
+size = 25
 
 
 def Discrete(ax, size, mask):
@@ -43,12 +43,12 @@ def Chessboard(size, mask):
         bx.plot(x, vertical+i, color="gray",linestyle = '--', zorder = 1)
 
     bx.quiver(10, 0, 12, 0, linestyle='-', linewidth=1.5, color='gray')
-    bx.quiver(0, 10, 0,12, linestyle='-', linewidth=1.5, color='gray',)
-    bx.text(10,0-0.8,'x',fontsize = 20,color = 'gray')
-    bx.text(0-0.8,10,'y',fontsize = 20,color = 'gray')
-    for i in range(10):
-        bx.text(i,0-0.7,'{}'.format(i),color = 'gray',fontsize = 15)
-        bx.text(0-0.7,i,'{}'.format(i),color = 'gray',fontsize = 15)
+    bx.quiver(0, 10, 0, 12, linestyle='-', linewidth=1.5, color='gray',)
+    bx.text(size, 0-0.8, 'x', fontsize = 12, color = 'gray')
+    bx.text(0-0.8, size, 'y', fontsize = 12, color = 'gray')
+    for i in range(size):
+        bx.text(i,0-0.7,'{}'.format(i),color = 'gray',fontsize = 9)
+        bx.text(0-0.7,i,'{}'.format(i),color = 'gray',fontsize = 9)
 
 def save_trajs(game):
     boxes, last_box = game.space.boxes, game.temp_box
@@ -125,7 +125,7 @@ def on_press(event):
     global game, ax, bx
     action = [round(event.xdata), round(event.ydata)]
     action = int(action[0]*size + action[1])
-    print("the currunt action is:", [round(event.xdata), round(event.ydata)] )
+    print("the current action is:", [round(event.xdata), round(event.ydata)] )
     if event.button==3:
         game.try_step([action])
     elif event.button==1:
@@ -141,7 +141,7 @@ def on_press(event):
     plt.figure(2)
     plt.cla()
     Chessboard(size, mask)
-    draw_3D_box(game)
+    draw_3D_box(game, container=[size,size,size])
     ax.figure.canvas.draw_idle()
     bx.figure.canvas.draw_idle()
 
@@ -153,11 +153,11 @@ def on_motion(event):
     game.try_step([action])
     plt.figure(1)
     plt.cla()
-    draw_3D_box(game)
+    draw_3D_box(game, container=[size,size,size])
     ax.figure.canvas.draw_idle()
 
 
-game = AdjustPackingGame(adjust_grid=size)
+game = AdjustPackingGame(adjust_grid=size, bin_size=[size,size,size])
 game.reset()
 fig1 = plt.figure(1)
 fig2 = plt.figure(2,figsize = (5,5))

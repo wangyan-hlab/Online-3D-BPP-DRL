@@ -1,27 +1,36 @@
 from numpy.random import randint
 from copy import deepcopy
+import torch
+import numpy as np
 
 def load(file_path):
-    f = open(file_path, 'r')
-    all_trajs = []
-    finish = False
-    while True:
-        f.readline()
-        traj = []
+    assert isinstance(file_path, str)
+    if file_path.lower().endswith(".txt"):
+        print("data is .txt file")
+        f = open(file_path, 'r')
+        all_trajs = []
+        finish = False
         while True:
-            box = f.readline()
-            box = box.strip('\n').split(' ')
-            if len(box) == 6:
-                box = [int(x) for x in box]
-                traj.append([box[0],box[1],box[2]])
-            else:
-                if len(traj) != 0:
-                    all_trajs.append(traj)
+            f.readline()
+            traj = []
+            while True:
+                box = f.readline()
+                box = box.strip('\n').split(' ')
+                if len(box) == 6:
+                    box = [int(x) for x in box]
+                    traj.append([box[0],box[1],box[2]])
                 else:
-                    finish = True
+                    if len(traj) != 0:
+                        all_trajs.append(traj)
+                    else:
+                        finish = True
+                    break
+            if finish == True:
                 break
-        if finish == True:
-            break
+    elif file_path.lower().endswith(".pt"):
+        print("data is .pt file")
+        all_trajs = torch.load(file_path)
+
     return all_trajs
 
 class BoxCreator(object):
@@ -83,7 +92,9 @@ class LoadBoxCreator(BoxCreator):
 
     def reset(self):
         self.box_list.clear()
-        self.index = randint(0,self.traj_nums)
+        # self.index = randint(0,self.traj_nums)
+        self.index = 0
+        print("chosen index:", self.index)
         self.boxes = self.box_trajs[self.index]
         self.recorder = []
         self.box_index = 0
