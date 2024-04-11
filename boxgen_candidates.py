@@ -3,23 +3,23 @@ import torch
 from sympy.utilities.iterables import multiset_permutations
 
 # real full height post boxes
+# lwh
+# BOX_FH_SIZES = {
+#     "1":[530, 290, 370], "2":[530, 230, 290], "3":[430, 210, 270],
+#     "4":[350, 190, 230], "5":[290, 170, 190], "6":[260, 150, 180],
+#     "7":[230, 130, 160], "8":[210, 110, 140], "9":[195, 105, 135],
+#     "10":[175, 95, 115], "11":[145, 85, 105], "12":[130, 80, 90]
+#     }
+# lhw
 BOX_FH_SIZES = {
-    "1":[530, 290, 370], "2":[530, 230, 290], "3":[430, 210, 270],
-    "4":[350, 190, 230], "5":[290, 170, 190], "6":[260, 150, 180],
-    "7":[230, 130, 160], "8":[210, 110, 140], "9":[195, 105, 135],
-    "10":[175, 95, 115], "11":[145, 85, 105], "12":[130, 80, 90]
+    "1":[530, 370, 290], "2":[530, 290, 230], "2.5":[410, 300, 300], "3":[430, 270, 210],
+    "4":[350, 230, 190], "5":[290, 190, 170], "6":[260, 180, 150],
+    "7":[230, 160, 130], "8":[210, 140, 110], "9":[195, 135, 105],
+    "10":[175, 115, 95], "11":[145, 105, 85], "12":[130, 90, 80]
     }
-# grid size: 40.0
-# box grid sizes:
-# {'1': [14, 8, 10], '2': [14, 6, 8], '3': [11, 6, 7], 
-#  '4': [9, 5, 6], '5': [8, 5, 5], '6': [7, 4, 5], 
-#  '7': [6, 4, 4], '8': [6, 3, 4], '9': [5, 3, 4], 
-#  '10': [5, 3, 3], '11': [4, 3, 3], '12': [4, 2, 3]}
-# grid size: 20.0
-# {'6': [13, 8, 9],'7': [12, 7, 8], '8': [11, 6, 7], '9': [10, 6, 7], 
-#  '10': [9, 5, 6], '11': [8, 5, 6], '12': [7, 4, 5]}
 
 # real half-height post boxes
+# lwh
 BOX_HH_SIZES = {
     "3.5":[430, 210, 270], "4.5":[350, 190, 115], "5.5":[290, 170, 95],
     "6.5":[260, 150, 90], "7.5":[230, 130, 80], "8.5":[210, 110, 70],
@@ -45,7 +45,7 @@ def vanilla_boxgen(box_seq_len, box_real_sizes, cases, bin_real_size=1000,
             permute [boolean]: if true, permute l, w, and h of each box
     """
     box_sets = []
-    grid_size = bin_real_size / grid_num
+    grid_size = np.ceil(bin_real_size / grid_num)
     print("grid size: {}".format(grid_size))
 
     # extract the box sizes from the dict into a list
@@ -56,7 +56,8 @@ def vanilla_boxgen(box_seq_len, box_real_sizes, cases, bin_real_size=1000,
 
     box_grid_sizes = {}
     for k, v in box_real_sizes.items():
-        box_grid_sizes[k] = np.ceil((np.array(v)/grid_size)).astype(int).tolist()
+        box_grid_sizes[k] = np.hstack((np.ceil((np.array(v)/grid_size)).astype(int),
+                                      100*(np.ceil((np.array(v)/grid_size)[-1]) - v[-1]/grid_size))).tolist()
     print("box grid sizes:\n{}".format(box_grid_sizes))
     
     sel_box_grid_sizes = []
@@ -74,7 +75,10 @@ def vanilla_boxgen(box_seq_len, box_real_sizes, cases, bin_real_size=1000,
 
     for i in range(cases):
         box_indices = np.random.randint(low=0, high=len(box_grid_sizes), size=box_seq_len)
-        box_set = [box_grid_sizes[box_index] for box_index in box_indices]
+        box_set = [[int(box_grid_sizes[box_index][0]), 
+                    int(box_grid_sizes[box_index][1]), 
+                    int(box_grid_sizes[box_index][2]), 
+                    int(box_grid_sizes[box_index][3])] for box_index in box_indices]
         box_sets.append(box_set)
         if i % 100 == 0:
             print("\n>>> Box set {}, length {}:\n{}".format(i, len(box_set), box_set))
@@ -87,10 +91,10 @@ if __name__ == "__main__":
     box_seq_len = 50
     box_real_sizes = BOX_FH_SIZES
     cases = 3000
-    bin_real_size=500
-    grid_num=25
-    box_type_num_range = [3,12]
-    permute = True
+    bin_real_size=1120
+    grid_num=28
+    box_type_num_range = [0,5]
+    permute = False
     save = True
 
     box_sequences = vanilla_boxgen(box_seq_len=box_seq_len,

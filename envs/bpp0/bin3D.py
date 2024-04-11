@@ -60,7 +60,7 @@ class PackingGame(gym.Env):
 
     @property
     def cur_observation(self):
-        hmap = self.space.plain
+        hmap = self.space.plain[:, :, 0]
         # mask = self.get_possible_position()
         size = self.get_box_plain()
         return np.reshape(np.stack((hmap,  *size)), newshape=(-1,))

@@ -9,13 +9,14 @@ class Box(object):
         lx, ly, lz: a box's position represented by its front-left-bottom (FLB) corner
         x, y, z: a box's length, width, and height
     """
-    def __init__(self, x, y, z, lx, ly, lz):
+    def __init__(self, x, y, z, lx, ly, lz, h_delta):
         self.x = x
         self.y = y
         self.z = z
         self.lx = lx
         self.ly = ly
         self.lz = lz
+        self.h_delta = h_delta
 
     def standardize(self):
         return tuple([self.x, self.y, self.z, self.lx, self.ly, self.lz])
@@ -28,7 +29,7 @@ class Space(object):
     """
     def __init__(self, width=10, length=10, height=10):
         self.plain_size = np.array([width, length, height])
-        self.plain = np.zeros(shape=(width, length), dtype=np.int32)
+        self.plain = np.zeros(shape=(width, length, 2), dtype=np.int32) # last dim includes total height of the grid and a number in [0, 1.0) representing the filled grid height delta for the toppest box on the grid
         self.boxes = []
         self.flags = [] # record rotation information
         self.height = height
@@ -49,9 +50,18 @@ class Space(object):
         ri = box.lx + box.x
         up = box.ly
         do = box.ly + box.y
-        max_h = np.max(plain[le:ri, up:do])
+        box_h_delta = box.h_delta
+        max_h = np.max(plain[le:ri, up:do, 0])
+        top_idx = np.asarray(np.where(plain[le:ri, up:do, 0] == max_h))
+        min_h_delta = np.min(plain[le:ri, up:do, 1][top_idx[:, 0], top_idx[:, 1]])
         max_h = max(max_h, box.lz + box.z)
-        plain[le:ri, up:do] = max_h
+        # make sure the h_delta less than one grid when loading the box
+        if box_h_delta + min_h_delta >= 100:
+            max_h -= 1
+            plain[le:ri, up:do, 1] = box_h_delta + min_h_delta - 100
+        else:
+            plain[le:ri, up:do, 1] = box_h_delta + min_h_delta
+        plain[le:ri, up:do, 0] = max_h
         return plain
 
     def get_box_list(self):
@@ -60,7 +70,7 @@ class Space(object):
             vec += box.standardize()
         return vec
 
-    def get_plain():
+    def get_plain(self):
         return copy.deepcopy(self.plain)
 
     def get_action_space(self):
@@ -122,8 +132,7 @@ class Space(object):
             return -1
         if lx < 0 or ly < 0:
             return -1
-
-        rec = plain[lx:lx+x, ly:ly+y]
+        rec = plain[lx:lx+x, ly:ly+y, 0]
         r00 = rec[0,0]
         r10 = rec[x-1,0]
         r01 = rec[0,y-1]
@@ -179,10 +188,11 @@ class Space(object):
             x = box_size[1]
             y = box_size[0]
         z = box_size[2]
+        h_delta = box_size[3]
         plain = self.plain
         new_h = self.check_box(plain, x, y, lx, ly, z)
         if new_h != -1:
-            self.boxes.append(Box(x, y, z, lx, ly, new_h)) # record rotated box
+            self.boxes.append(Box(x, y, z, lx, ly, new_h, h_delta))
             self.flags.append(flag)
             self.plain = self.update_height_graph(plain, self.boxes[-1])
             self.height = max(self.height, new_h + z)
