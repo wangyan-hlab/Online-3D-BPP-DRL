@@ -13,7 +13,10 @@ class PackingGame(gym.Env):
         self.box_creator = box_creator
         self.bin_size = container_size
         self.area = int(self.bin_size[0] * self.bin_size[1])
-        self.h_comp = kwargs['h_comp']
+        if 'h_comp' in kwargs:
+            self.h_comp = kwargs['h_comp']
+        else:
+            self.h_comp = False
         self.space = Space(*self.bin_size, h_comp=self.h_comp)
         self.can_rotate = enable_rotation
 

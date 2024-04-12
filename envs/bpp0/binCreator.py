@@ -35,7 +35,11 @@ class RandomBoxCreator(BoxCreator):
             self.box_set = RandomBoxCreator.default_box_set
 
         # TODO: this is a hacking code to use an existing series of box sizes for random creator
-        self.box_set = [[14, 10, 8], [14, 8, 6], [11, 8, 8], [11, 7, 6], [9, 6, 5]]
+        # self.box_set = [[14, 10, 8], [14, 8, 6], [11, 8, 8], [11, 7, 6], [9, 6, 5]]
+        # type 8~12 lhw, hlw
+        self.box_set = [[11, 7, 6, 0], [7, 11, 6, 0], [10, 7, 6, 0], [7, 10, 6, 0], 
+                        [9, 6, 5, 0], [6, 9, 5, 0], [8, 6, 5, 0], [6, 8, 5, 0], 
+                        [7, 5, 4, 0], [5, 7, 4, 0]]
 
         print(self.box_set)
 

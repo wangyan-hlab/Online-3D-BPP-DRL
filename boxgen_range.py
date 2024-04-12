@@ -42,6 +42,8 @@ if __name__ == "__main__":
             env.reset()
             box_set = env.box_creator.box_set[:-1]
             checkpass, ratio = check_boxgen(box_set, args.container_size)
+            for i in range(len(box_set)):
+                box_set[i] = [box_set[i][0], box_set[i][1], box_set[i][2], 0]
             if checkpass:
                 box_sets.append(box_set)
                 if i % 1 == 0:
