@@ -13,7 +13,8 @@ class PackingGame(gym.Env):
         self.box_creator = box_creator
         self.bin_size = container_size
         self.area = int(self.bin_size[0] * self.bin_size[1])
-        self.space = Space(*self.bin_size)
+        self.h_comp = kwargs['h_comp']
+        self.space = Space(*self.bin_size, h_comp=self.h_comp)
         self.can_rotate = enable_rotation
 
         if not test and box_creator is None:
@@ -54,7 +55,7 @@ class PackingGame(gym.Env):
 
     def reset(self):
         self.box_creator.reset()
-        self.space = Space(*self.bin_size)
+        self.space = Space(*self.bin_size, h_comp=self.h_comp)
         self.box_creator.generate_box_size()
         return self.cur_observation
 

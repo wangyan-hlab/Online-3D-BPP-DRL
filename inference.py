@@ -42,12 +42,15 @@ class BppAgent(object):
                             test=True, 
                             data_name=data_url,
                             enable_rotation=args.enable_rotation,
-                            data_type=args.data_type)
+                            data_type=args.data_type,
+                            h_comp=args.h_comp)
         print('Env name: ', args.env_name)
         print('Data url: ', data_url)
         print('Model url: ', args.load_dir + args.load_name)
         print('Case number: ', args.cases)
         print('Known item number: ', args.preview)
+        print('Height compensation:', args.h_comp)
+        print("\n")
 
         self.bin_size = args.bin_size
         self.grid = np.zeros(shape=(self.bin_size[0], self.bin_size[1]), dtype=np.int32) # height map

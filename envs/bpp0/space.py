@@ -27,12 +27,13 @@ class Space(object):
     Args:
         width, length, height: the bin's size
     """
-    def __init__(self, width=10, length=10, height=10):
+    def __init__(self, width=10, length=10, height=10, h_comp=False):
         self.plain_size = np.array([width, length, height])
-        self.plain = np.zeros(shape=(width, length, 2), dtype=np.int32) # last dim includes total height of the grid and a number in [0, 1.0) representing the filled grid height delta for the toppest box on the grid
+        self.plain = np.zeros(shape=(width, length, 2), dtype=np.int32) # last dim includes total height of the grid and a number in [0, 100) representing the filled grid height delta (unit: %) for the toppest box on the grid
         self.boxes = []
         self.flags = [] # record rotation information
         self.height = height
+        self.h_comp = h_comp    # height delta 
 
     def print_height_graph(self):
         print(self.plain)
@@ -43,8 +44,8 @@ class Space(object):
             plain = self.update_height_graph(plain, box)
         return plain
 
-    @staticmethod
-    def update_height_graph(plain, box):
+    # @staticmethod
+    def update_height_graph(self, plain, box):
         plain = copy.deepcopy(plain)
         le = box.lx
         ri = box.lx + box.x
@@ -52,15 +53,22 @@ class Space(object):
         do = box.ly + box.y
         box_h_delta = box.h_delta
         max_h = np.max(plain[le:ri, up:do, 0])
-        top_idx = np.asarray(np.where(plain[le:ri, up:do, 0] == max_h))
-        min_h_delta = np.min(plain[le:ri, up:do, 1][top_idx[:, 0], top_idx[:, 1]])
-        max_h = max(max_h, box.lz + box.z)
+
         # make sure the h_delta less than one grid when loading the box
-        if box_h_delta + min_h_delta >= 100:
-            max_h -= 1
-            plain[le:ri, up:do, 1] = box_h_delta + min_h_delta - 100
-        else:
-            plain[le:ri, up:do, 1] = box_h_delta + min_h_delta
+        if self.h_comp:
+            top_idx = np.asarray(np.where(plain[le:ri, up:do, 0] == max_h))
+            min_h_delta = np.min(plain[le:ri, up:do, 1][top_idx[:, 0], top_idx[:, 1]])
+        
+        max_h = max(max_h, box.lz + box.z)
+        
+        # make sure the h_delta less than one grid when loading the box
+        if self.h_comp:
+            if box_h_delta + min_h_delta >= 100:
+                max_h -= 1
+                plain[le:ri, up:do, 1] = box_h_delta + min_h_delta - 100
+            else:
+                plain[le:ri, up:do, 1] = box_h_delta + min_h_delta
+
         plain[le:ri, up:do, 0] = max_h
         return plain
 

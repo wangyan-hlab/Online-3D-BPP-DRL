@@ -59,6 +59,9 @@ def get_args():
     parser.add_argument(
         '--cases', default=100, type=int,  help='the number of sequences used for test (default 100)'
     )
+    parser.add_argument(
+        '--h_comp', action='store_true', default=False, help='add compensation for the height delta from grid parametrization'
+    )
 
     # saving and logging
     parser.add_argument(

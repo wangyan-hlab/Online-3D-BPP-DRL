@@ -149,6 +149,7 @@ class MDlayerBoxCreator(BoxCreator):
         super().__init__()
         self.container = bin(container_size, given_bound)
         self.update_index = 0
+        self.bin_size = container_size
 
     def reset(self):
         self.box_list.clear()
@@ -157,8 +158,8 @@ class MDlayerBoxCreator(BoxCreator):
         self.boxes = self.container.boxes
         self.default_box_set = []
         for box in self.boxes:
-            self.default_box_set.append([box.x, box.y, box.z])
-        self.default_box_set.append([10, 10, 10])
+            self.default_box_set.append([box.x, box.y, box.z, 0])
+        self.default_box_set.append([self.bin_size[0], self.bin_size[1], self.bin_size[2], 0])
         self.box_set = self.default_box_set
 
     def generate_box_size(self, **kwargs):
