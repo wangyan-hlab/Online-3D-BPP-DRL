@@ -54,7 +54,8 @@ def get_possible_position(observation, container_size):
     for i in range(width - x + 1):
         for j in range(length - y + 1):
             if check_box(plain, x, y, i, j, z, container_size) >= 0:
-                action_mask[i, j] = 1
+                prior_w = np.exp(-1.0 * np.linalg.norm((i, j))/np.linalg.norm((width-x, length-y))) # more priority to points closer to origin
+                action_mask[i, j] = 1 * prior_w
 
     if action_mask.sum() == 0:
         action_mask[:, :] = 1
