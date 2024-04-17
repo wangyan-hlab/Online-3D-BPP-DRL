@@ -9,7 +9,7 @@ def check_boxgen(box_set, container_size):
     container_volume = container_size[0] * container_size[1] * container_size[2]
     box_volumes = 0
     for box in box_set:
-        x, y, z = box
+        x, y, z, _ = box
         box_volume = x * y * z
         box_volumes += box_volume
     ratio = box_volumes/container_volume
@@ -38,7 +38,7 @@ if __name__ == "__main__":
 
     if args.data_type == 'cut2':
         box_sets = []
-        for i in range(args.cases):
+        for case in range(args.cases):
             env.reset()
             box_set = env.box_creator.box_set[:-1]
             checkpass, ratio = check_boxgen(box_set, args.container_size)
@@ -46,8 +46,8 @@ if __name__ == "__main__":
                 box_set[i] = [box_set[i][0], box_set[i][1], box_set[i][2], 0]
             if checkpass:
                 box_sets.append(box_set)
-                if i % 1 == 0:
-                    print("\n>>> Box set {}, length {}:\n{}".format(i, len(box_set), box_set))
+                if case % 1 == 0:
+                    print("\n>>> Box set {}, length {}:\n{}".format(case, len(box_set), box_set))
             else:
                 print("ratio:", ratio)
                 raise ValueError("The space ratio of generated box is not 1.0")
