@@ -116,13 +116,18 @@ class PackingGame(gym.Env):
             return self.cur_observation, reward, done, info
 
         box_ratio = self.get_box_ratio()
+        # TODO: [testin] reward shaping for palletize far and low space first
+        lx, ly = self.space.idx_to_position(idx)
+        far_distance_reward = np.exp(-1.0 * np.linalg.norm([lx, ly])/np.linalg.norm(self.bin_size[:2]))
+        lz = self.space.plain[lx, ly, 0]
+        low_height_reward = np.exp(-1.0 * lz/self.bin_size[-1])
 
         self.box_creator.drop_box() # remove current box from the list
         self.box_creator.generate_box_size() # add a new box to the list
 
         plain = self.space.plain
 
-        reward = box_ratio * 10
+        reward = box_ratio * 10 + far_distance_reward * 2.0 + low_height_reward * 0.0
         done = False
         info = dict()
         info['counter'] = len(self.space.boxes)
